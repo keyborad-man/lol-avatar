@@ -8,6 +8,8 @@
 
 ![召唤师图标档案馆页面预览](docs/preview.png)
 
+![历史召唤师图标列表预览](docs/icons-preview.png)
+
 ## 本地运行
 
 直接打开 `index.html`，或使用任意静态文件服务器：
