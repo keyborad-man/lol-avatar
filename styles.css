@@ -188,7 +188,7 @@ h1 em { color: var(--gold-light); font-style: normal; }
 .archive-facts dt { color: var(--text); font-family: var(--serif); font-size: 20px; }
 .archive-facts dd { margin: 6px 0 0; color: var(--muted); font-size: 10px; letter-spacing: 0.15em; }
 
-.catalog { padding: 78px clamp(24px, 5vw, 80px) 96px; }
+.catalog { padding: 78px clamp(24px, 5vw, 80px) 56px; }
 .section-heading { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 32px; }
 .section-heading .section-kicker { margin-bottom: 12px; }
 .section-heading h2 { margin: 0; font-family: var(--serif); font-size: clamp(30px, 4vw, 46px); font-weight: 500; }
@@ -219,7 +219,8 @@ h1 em { color: var(--gold-light); font-style: normal; }
 .empty-state p { margin: 0 0 24px; color: var(--muted); font-size: 13px; }
 .empty-state button { padding: 11px 20px; border: 1px solid var(--line-gold); background: transparent; color: var(--gold-light); cursor: pointer; }
 
-footer { display: flex; justify-content: space-between; gap: 48px; padding: 46px clamp(24px, 5vw, 80px); border-top: 1px solid var(--line); background: #03090f; }
+footer { border-top: 1px solid var(--line); background: #03090f; }
+.footer-inner { display: flex; width: min(100%, 1540px); margin: 0 auto; padding: 42px clamp(24px, 5vw, 80px); justify-content: space-between; gap: 48px; }
 .footer-brand { display: flex; gap: 16px; align-items: center; min-width: 280px; }
 .footer-brand p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.65; }
 .footer-brand strong { color: #cbd2d4; font-family: var(--serif); font-size: 13px; }
@@ -260,7 +261,7 @@ noscript { display: block; padding: 20px; background: #8c3a31; color: #fff; text
   .preview-dialog[open] { grid-template-columns: 1fr 0.9fr; }
   .preview-art { min-height: 400px; padding: 42px; }
   .preview-details { padding: 48px 32px 38px; }
-  footer { flex-direction: column; }
+  .footer-inner { flex-direction: column; }
 }
 
 @media (max-width: 620px) {
@@ -290,7 +291,7 @@ noscript { display: block; padding: 20px; background: #8c3a31; color: #fff; text
   .preview-art { min-height: 0; padding: 52px; }
   .preview-details { padding: 34px 26px 30px; }
   .preview-details h2 { margin-bottom: 22px; font-size: 28px; }
-  footer { padding: 38px 22px; }
+  .footer-inner { padding: 38px 22px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
