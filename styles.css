@@ -16,7 +16,7 @@
 
 * { box-sizing: border-box; }
 
-html { scroll-behavior: smooth; }
+html { overflow-x: hidden; scroll-behavior: smooth; }
 
 body {
   margin: 0;
@@ -286,9 +286,22 @@ noscript { display: block; padding: 20px; background: #8c3a31; color: #fff; text
   .icon-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; min-height: 500px; }
   .icon-card-label { padding: 8px; }
   .icon-card-label small { display: none; }
-  .preview-dialog { max-height: calc(100dvh - 24px); overflow-y: auto; }
+  .preview-dialog {
+    position: fixed;
+    inset: 12px;
+    width: auto;
+    max-width: none;
+    height: fit-content;
+    max-height: calc(100dvh - 24px);
+    margin: auto 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
   .preview-dialog[open] { display: block; }
-  .preview-art { min-height: 0; padding: 52px; }
+  .dialog-close { top: 10px; right: 10px; width: 44px; height: 44px; }
+  .preview-art { min-height: 0; padding: 58px 24px 28px; }
+  .corner-tl { top: 20px; left: 20px; }
+  .corner-br { right: 20px; bottom: 20px; }
   .preview-details { padding: 34px 26px 30px; }
   .preview-details h2 { margin-bottom: 22px; font-size: 28px; }
   .footer-inner { padding: 38px 22px; }
