@@ -1,10 +1,11 @@
-(function () {
+(async function () {
   "use strict";
 
   const PAGE_SIZE = 50;
-  const DATA_DRAGON_VERSION = window.DATA_DRAGON_VERSION;
-  const ICON_BASE = `https://ddragon.leagueoflegends.com/cdn/${DATA_DRAGON_VERSION}/img/profileicon`;
-  const ids = Array.isArray(window.PROFILE_ICON_IDS) ? window.PROFILE_ICON_IDS : [];
+  const DATA_DRAGON_BASE = "https://ddragon.leagueoflegends.com";
+  let dataDragonVersion = window.DATA_DRAGON_VERSION;
+  let iconBase = `${DATA_DRAGON_BASE}/cdn/${dataDragonVersion}/img/profileicon`;
+  let ids = Array.isArray(window.PROFILE_ICON_IDS) ? window.PROFILE_ICON_IDS : [];
 
   const elements = {
     form: document.querySelector("#search-form"),
@@ -36,7 +37,35 @@
   let dialogTimeline = null;
 
   function iconUrl(id) {
-    return `${ICON_BASE}/${id}.png`;
+    return `${iconBase}/${id}.png`;
+  }
+
+  async function loadLatestIcons() {
+    const versionsResponse = await fetch(`${DATA_DRAGON_BASE}/api/versions.json`, { cache: "no-store" });
+    if (!versionsResponse.ok) throw new Error(`无法获取 Data Dragon 版本：${versionsResponse.status}`);
+
+    const versions = await versionsResponse.json();
+    const latestVersion = versions[0];
+    if (typeof latestVersion !== "string") throw new TypeError("Data Dragon 未返回最新版本。");
+
+    const iconsResponse = await fetch(
+      `${DATA_DRAGON_BASE}/cdn/${latestVersion}/data/zh_CN/profileicon.json`,
+      { cache: "no-store" },
+    );
+    if (!iconsResponse.ok) throw new Error(`无法获取最新头像数据：${iconsResponse.status}`);
+
+    const payload = await iconsResponse.json();
+    if (!payload.data || typeof payload.data !== "object") throw new TypeError("Data Dragon 未返回头像数据。");
+
+    const latestIds = [...new Set(Object.keys(payload.data).map(Number))]
+      .filter((id) => Number.isInteger(id) && id >= 0)
+      .sort((a, b) => b - a);
+    if (latestIds.length === 0) throw new Error("最新头像数据为空。");
+
+    dataDragonVersion = latestVersion;
+    iconBase = `${DATA_DRAGON_BASE}/cdn/${dataDragonVersion}/img/profileicon`;
+    ids = latestIds;
+    filteredIds = ids;
   }
 
   function formatNumber(value) {
@@ -433,6 +462,12 @@
   elements.dialog.addEventListener("click", (event) => {
     if (event.target === elements.dialog) closePreview();
   });
+
+  try {
+    await loadLatestIcons();
+  } catch (error) {
+    console.warn("获取最新头像数据失败，使用本地快照。", error);
+  }
 
   elements.total.textContent = formatNumber(ids.length);
   render();
