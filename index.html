@@ -105,15 +105,30 @@
     <dialog class="preview-dialog" id="preview-dialog" aria-labelledby="preview-title">
       <button class="dialog-close" id="dialog-close" type="button" aria-label="关闭预览">×</button>
       <div class="preview-art">
-        <div class="preview-frame">
-          <img id="preview-image" alt="" />
+        <p class="holo-edition"><span aria-hidden="true">✦</span> HOLOGRAPHIC · 典藏闪卡</p>
+        <div class="preview-stage" id="preview-stage" tabindex="0" role="group" aria-label="旋转图标闪卡" aria-describedby="holo-hint">
+          <div class="preview-frame">
+            <div class="preview-card holo-surface" id="preview-card">
+              <img id="preview-image" alt="" draggable="false" />
+              <span class="holo-sparkles" aria-hidden="true"></span>
+            </div>
+          </div>
         </div>
+        <p class="holo-hint" id="holo-hint">移动鼠标或左右滑动，感受流光<br />也可聚焦卡片后按方向键，按 Home 复位</p>
         <span class="corner corner-tl" aria-hidden="true"></span>
         <span class="corner corner-br" aria-hidden="true"></span>
       </div>
       <div class="preview-details">
         <p class="section-kicker">SUMMONER ICON</p>
         <h2 id="preview-title">图标 #<span id="preview-id"></span></h2>
+        <div class="holo-controls">
+          <button class="holo-toggle" id="holo-toggle" type="button" aria-label="闪卡效果" aria-pressed="true"><span aria-hidden="true">✦</span> 闪卡效果</button>
+          <div class="holo-strength">
+            <label for="holo-strength">流光强度</label>
+            <output id="holo-strength-value" for="holo-strength">65%</output>
+            <input id="holo-strength" type="range" min="0" max="100" value="65" />
+          </div>
+        </div>
         <dl>
           <div><dt>图标 ID</dt><dd id="detail-id"></dd></div>
           <div><dt>图像尺寸</dt><dd id="detail-size">载入中…</dd></div>

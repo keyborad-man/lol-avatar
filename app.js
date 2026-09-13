@@ -20,6 +20,11 @@
     dialog: document.querySelector("#preview-dialog"),
     dialogClose: document.querySelector("#dialog-close"),
     previewImage: document.querySelector("#preview-image"),
+    previewStage: document.querySelector("#preview-stage"),
+    previewCard: document.querySelector("#preview-card"),
+    holoToggle: document.querySelector("#holo-toggle"),
+    holoStrength: document.querySelector("#holo-strength"),
+    holoStrengthValue: document.querySelector("#holo-strength-value"),
     previewId: document.querySelector("#preview-id"),
     detailId: document.querySelector("#detail-id"),
     detailSize: document.querySelector("#detail-size"),
@@ -35,6 +40,78 @@
   let cardTween = null;
   let cardTrigger = null;
   let dialogTimeline = null;
+  let holoEnabled = true;
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+  function setupHoloSurface(host, surface, tilt = 0) {
+    let x = 50;
+    let y = 50;
+    let frame = null;
+
+    function move(nextX, nextY) {
+      if (!holoEnabled) return;
+      x = Math.max(0, Math.min(100, nextX));
+      y = Math.max(0, Math.min(100, nextY));
+      if (frame !== null) return;
+      frame = requestAnimationFrame(() => {
+        frame = null;
+        if (!surface.isConnected) return;
+        surface.style.setProperty("--light-x", `${x}%`);
+        surface.style.setProperty("--light-y", `${y}%`);
+        surface.style.setProperty("--foil-x", `${100 - x}%`);
+        surface.style.setProperty("--foil-y", `${100 - y}%`);
+        const angle = reducedMotion.matches ? 0 : tilt;
+        surface.style.setProperty("--rotate-x", `${(50 - y) * angle / 50}deg`);
+        surface.style.setProperty("--rotate-y", `${(x - 50) * angle / 50}deg`);
+      });
+    }
+
+    function reset() {
+      cancelAnimationFrame(frame);
+      frame = null;
+      x = y = 50;
+      ["--light-x", "--light-y", "--foil-x", "--foil-y", "--rotate-x", "--rotate-y"].forEach((name) => {
+        surface.style.removeProperty(name);
+      });
+    }
+
+    function followPointer(event) {
+      if (event.pointerType !== "mouse" && !host.hasPointerCapture(event.pointerId)) return;
+      const bounds = host.getBoundingClientRect();
+      move((event.clientX - bounds.left) / bounds.width * 100, (event.clientY - bounds.top) / bounds.height * 100);
+    }
+
+    host.addEventListener("pointermove", followPointer);
+    host.addEventListener("pointerleave", (event) => {
+      if (!host.hasPointerCapture(event.pointerId)) reset();
+    });
+    host.addEventListener("blur", reset);
+
+    if (tilt) {
+      host.addEventListener("pointerdown", (event) => {
+        if (!holoEnabled || event.button !== 0 || !event.isPrimary) return;
+        if (event.pointerType !== "mouse") host.setPointerCapture(event.pointerId);
+        host.focus({ preventScroll: true });
+        followPointer(event);
+      });
+      host.addEventListener("pointerup", (event) => {
+        if (host.hasPointerCapture(event.pointerId)) host.releasePointerCapture(event.pointerId);
+      });
+      host.addEventListener("pointercancel", reset);
+      host.addEventListener("lostpointercapture", reset);
+      host.addEventListener("keydown", (event) => {
+        if (!holoEnabled || !["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home"].includes(event.key)) return;
+        event.preventDefault();
+        if (event.key === "Home") return reset();
+        move(x + (event.key === "ArrowRight" ? 10 : event.key === "ArrowLeft" ? -10 : 0),
+          y + (event.key === "ArrowDown" ? 10 : event.key === "ArrowUp" ? -10 : 0));
+      });
+    }
+
+    return reset;
+  }
+
+  const resetPreviewHolo = setupHoloSurface(elements.previewStage, elements.previewCard, 14);
 
   function iconUrl(id) {
     return `${iconBase}/${id}.png`;
@@ -148,7 +225,11 @@
     label.className = "icon-card-label";
     label.innerHTML = `<small>ICON ID</small><strong>#${id}</strong>`;
 
-    card.append(image, label);
+    const art = document.createElement("span");
+    art.className = "holo-surface";
+    art.append(image);
+    card.append(art, label);
+    setupHoloSurface(card, art);
     card.addEventListener("click", () => openPreview(id));
     return card;
   }
@@ -292,6 +373,7 @@
   }
 
   function cleanupPreview() {
+    resetPreviewHolo();
     const gsap = window.gsap;
     if (gsap) {
       gsap.set(elements.dialog, { clearProps: "opacity,visibility,transform" });
@@ -306,6 +388,8 @@
   }
 
   function openPreview(id) {
+    resetPreviewHolo();
+    elements.previewCard.classList.remove("image-error");
     selectedId = id;
     elements.previewId.textContent = id;
     elements.detailId.textContent = id;
@@ -453,10 +537,24 @@
   elements.emptyReset.addEventListener("click", resetSearch);
   elements.dialogClose.addEventListener("click", closePreview);
   elements.dialog.addEventListener("close", cleanupPreview);
+  elements.holoToggle.addEventListener("click", () => {
+    holoEnabled = !holoEnabled;
+    document.body.classList.toggle("holo-disabled", !holoEnabled);
+    elements.holoToggle.setAttribute("aria-pressed", String(holoEnabled));
+    elements.holoStrength.disabled = !holoEnabled;
+    resetPreviewHolo();
+  });
+  elements.holoStrength.addEventListener("input", () => {
+    document.documentElement.style.setProperty("--holo-strength", Number(elements.holoStrength.value) / 100);
+    elements.holoStrengthValue.value = `${elements.holoStrength.value}%`;
+  });
+  reducedMotion.addEventListener("change", resetPreviewHolo);
   elements.previewImage.addEventListener("load", () => {
+    elements.previewCard.classList.remove("image-error");
     elements.detailSize.textContent = `${elements.previewImage.naturalWidth} × ${elements.previewImage.naturalHeight} px`;
   });
   elements.previewImage.addEventListener("error", () => {
+    elements.previewCard.classList.add("image-error");
     elements.detailSize.textContent = "资源暂时不可用";
   });
   elements.dialog.addEventListener("click", (event) => {
