@@ -25,6 +25,9 @@
     holoToggle: document.querySelector("#holo-toggle"),
     holoStrength: document.querySelector("#holo-strength"),
     holoStrengthValue: document.querySelector("#holo-strength-value"),
+    holoPlayback: document.querySelector("#holo-playback"),
+    holoAuto: document.querySelector("#holo-auto"),
+    holoReset: document.querySelector("#holo-reset"),
     previewId: document.querySelector("#preview-id"),
     detailId: document.querySelector("#detail-id"),
     detailSize: document.querySelector("#detail-size"),
@@ -42,6 +45,37 @@
   let dialogTimeline = null;
   let holoEnabled = true;
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+  let holoModule = null;
+  let holoPreview = null;
+  let holoAuto = !reducedMotion.matches;
+
+  function updateHoloPlayback() {
+    elements.holoAuto.setAttribute("aria-pressed", String(holoAuto));
+    elements.holoAuto.textContent = holoAuto ? "Ⅱ 暂停赏卡" : "▷ 自动赏卡";
+    elements.holoAuto.disabled = !holoEnabled || reducedMotion.matches;
+    elements.holoReset.disabled = !holoEnabled;
+    holoPreview?.setAuto(holoAuto);
+  }
+
+  async function enhancePreview(id) {
+    // A directly opened file keeps the CSS preview; modules require a local server.
+    if (location.protocol === "file:") return;
+    try {
+      holoModule ??= import("./holo-preview.mjs");
+      const { HoloPreview } = await holoModule;
+      if (!elements.dialog.open || selectedId !== id) return;
+      holoPreview ??= new HoloPreview(elements.previewStage);
+      holoPreview.setEnabled(holoEnabled);
+      holoPreview.setStrength(Number(elements.holoStrength.value) / 100);
+      updateHoloPlayback();
+      if (await holoPreview.show(iconUrl(id), id)) elements.holoPlayback.hidden = false;
+    } catch (error) {
+      if (!elements.dialog.open || selectedId !== id) return;
+      holoPreview?.hide();
+      elements.holoPlayback.hidden = true;
+      console.warn("3D 闪卡暂不可用，保留普通闪卡预览。", error);
+    }
+  }
 
   function setupHoloSurface(host, surface, tilt = 0) {
     let x = 50;
@@ -52,6 +86,10 @@
       if (!holoEnabled) return;
       x = Math.max(0, Math.min(100, nextX));
       y = Math.max(0, Math.min(100, nextY));
+      if (tilt && holoPreview && holoAuto) {
+        holoAuto = false;
+        updateHoloPlayback();
+      }
       if (frame !== null) return;
       frame = requestAnimationFrame(() => {
         frame = null;
@@ -63,6 +101,7 @@
         const angle = reducedMotion.matches ? 0 : tilt;
         surface.style.setProperty("--rotate-x", `${(50 - y) * angle / 50}deg`);
         surface.style.setProperty("--rotate-y", `${(x - 50) * angle / 50}deg`);
+        if (tilt) holoPreview?.setPointer(x, y);
       });
     }
 
@@ -70,6 +109,7 @@
       cancelAnimationFrame(frame);
       frame = null;
       x = y = 50;
+      if (tilt) holoPreview?.reset();
       ["--light-x", "--light-y", "--foil-x", "--foil-y", "--rotate-x", "--rotate-y"].forEach((name) => {
         surface.style.removeProperty(name);
       });
@@ -373,6 +413,8 @@
   }
 
   function cleanupPreview() {
+    holoPreview?.hide();
+    elements.holoPlayback.hidden = true;
     resetPreviewHolo();
     const gsap = window.gsap;
     if (gsap) {
@@ -399,6 +441,8 @@
     elements.previewImage.src = iconUrl(id);
     elements.dialog.showModal();
     animateDialogIn();
+    holoAuto = !reducedMotion.matches;
+    enhancePreview(id);
   }
 
   function closePreview() {
@@ -542,13 +586,34 @@
     document.body.classList.toggle("holo-disabled", !holoEnabled);
     elements.holoToggle.setAttribute("aria-pressed", String(holoEnabled));
     elements.holoStrength.disabled = !holoEnabled;
+    holoPreview?.setEnabled(holoEnabled);
+    updateHoloPlayback();
     resetPreviewHolo();
   });
   elements.holoStrength.addEventListener("input", () => {
     document.documentElement.style.setProperty("--holo-strength", Number(elements.holoStrength.value) / 100);
     elements.holoStrengthValue.value = `${elements.holoStrength.value}%`;
+    holoPreview?.setStrength(Number(elements.holoStrength.value) / 100);
   });
-  reducedMotion.addEventListener("change", resetPreviewHolo);
+  elements.holoAuto.addEventListener("click", () => {
+    holoAuto = !holoAuto;
+    updateHoloPlayback();
+  });
+  elements.holoReset.addEventListener("click", () => {
+    holoAuto = false;
+    updateHoloPlayback();
+    resetPreviewHolo();
+    holoPreview?.refresh();
+  });
+  elements.previewStage.addEventListener("holo-unavailable", () => { elements.holoPlayback.hidden = true; });
+  elements.previewStage.addEventListener("holo-restored", () => {
+    if (elements.dialog.open && selectedId !== null) enhancePreview(selectedId);
+  });
+  reducedMotion.addEventListener("change", () => {
+    holoAuto = false;
+    updateHoloPlayback();
+    resetPreviewHolo();
+  });
   elements.previewImage.addEventListener("load", () => {
     elements.previewCard.classList.remove("image-error");
     elements.detailSize.textContent = `${elements.previewImage.naturalWidth} × ${elements.previewImage.naturalHeight} px`;

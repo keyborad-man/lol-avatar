@@ -271,15 +271,18 @@ footer { border-top: 1px solid var(--line); background: #03090f; }
 .legal { max-width: 720px; margin: 0; color: #62727a; font-size: 10px; line-height: 1.8; }
 .legal a { color: #8a9ea7; }
 
-.preview-dialog { width: min(880px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); padding: 0; overflow-x: hidden; overflow-y: auto; border: 1px solid var(--line-gold); background: #07131e; color: var(--text); box-shadow: 0 40px 110px rgba(0, 0, 0, 0.8); }
+.preview-dialog { width: min(980px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); padding: 0; overflow-x: hidden; overflow-y: auto; border: 1px solid var(--line-gold); background: #07131e; color: var(--text); box-shadow: 0 40px 110px rgba(0, 0, 0, 0.8); }
 .preview-dialog[open] { display: grid; grid-template-columns: 1.1fr 0.9fr; }
 .preview-dialog::backdrop { background: rgba(0, 5, 10, 0.82); backdrop-filter: blur(8px); }
 .dialog-close { position: absolute; z-index: 2; top: 12px; right: 12px; width: 36px; height: 36px; border: 1px solid var(--line); background: rgba(4, 11, 18, 0.76); color: #b6c1c5; font-size: 24px; cursor: pointer; }
-.preview-art { position: relative; display: grid; min-height: 480px; padding: 58px; place-items: center; align-content: center; gap: 28px; background: radial-gradient(circle, rgba(37, 117, 126, 0.25), transparent 62%), #06101a; }
-.preview-stage { width: min(100%, 330px); touch-action: pan-y; outline-offset: 12px; cursor: grab; }
+.preview-art { position: relative; display: grid; min-height: 480px; padding: 32px 24px; place-items: center; align-content: center; gap: 12px; background: radial-gradient(ellipse at 50% 45%, #21465366, transparent 65%), #040c14; }
+.preview-stage { position: relative; display: grid; place-items: center; width: min(100%, 420px); aspect-ratio: .9; touch-action: pan-y; outline-offset: 2px; cursor: grab; }
 .preview-stage:active { cursor: grabbing; }
 .preview-stage:focus-visible { outline: 1px solid var(--gold-light); }
-.preview-frame { width: 100%; }
+.preview-frame { width: min(85%, 330px); }
+.holo-canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; opacity: 0; pointer-events: none; }
+.webgl-ready .holo-canvas { opacity: 1; filter: drop-shadow(0 24px 22px #0008); }
+.webgl-ready .preview-frame { visibility: hidden !important; }
 .preview-card {
   padding: 9px;
   border: 1px solid var(--gold);
@@ -314,6 +317,11 @@ footer { border-top: 1px solid var(--line); background: #03090f; }
 .holo-strength output { color: var(--gold-light); font-variant-numeric: tabular-nums; }
 .holo-strength input { grid-column: 1 / -1; width: 100%; height: 24px; margin: 0; accent-color: var(--gold); cursor: pointer; }
 .holo-strength:has(input:disabled) { opacity: 0.4; }
+.holo-playback { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+.holo-playback[hidden] { display: none; }
+.holo-playback button { min-height: 38px; padding: 8px 12px; border: 1px solid var(--line-gold); border-radius: 4px; background: #0c1d2d; color: var(--gold-light); font-size: 11px; cursor: pointer; }
+.holo-playback button[aria-pressed="true"] { background: #c9a3521a; }
+.holo-playback button:disabled { opacity: .4; cursor: default; }
 .holo-disabled .preview-card { transform: none; background: #0b1824; }
 .holo-disabled { --holo-strength: 0; }
 .holo-disabled .holo-edition, .holo-disabled .holo-hint { visibility: hidden; }
@@ -342,7 +350,7 @@ noscript { display: block; padding: 20px; background: #8c3a31; color: #fff; text
   .hero::before { opacity: 0.5; }
   .icon-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
   .preview-dialog[open] { grid-template-columns: 1fr 0.9fr; }
-  .preview-art { min-height: 400px; padding: 42px; }
+  .preview-art { min-height: 400px; padding: 32px 18px; }
   .preview-details { padding: 48px 32px 38px; }
   .footer-inner { flex-direction: column; }
 }
@@ -382,7 +390,7 @@ noscript { display: block; padding: 20px; background: #8c3a31; color: #fff; text
   }
   .preview-dialog[open] { display: block; }
   .dialog-close { top: 10px; right: 10px; width: 44px; height: 44px; }
-  .preview-art { min-height: 0; padding: 58px 24px 28px; }
+  .preview-art { min-height: 0; padding: 58px 16px 28px; }
   .corner-tl { top: 20px; left: 20px; }
   .corner-br { right: 20px; bottom: 20px; }
   .preview-details { padding: 34px 26px 30px; }
